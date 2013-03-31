@@ -44,7 +44,7 @@ import scoring
 import drillcluster
 
 VERSION_MAJOR=1
-VERSION_MINOR=8
+VERSION_MINOR='9b'
 
 RANDOM_SEARCH = 1
 EXHAUSTIVE_SEARCH = 2
@@ -64,6 +64,7 @@ Usage: gerbmerge [Options] configfile [layoutfile]
 Options:
     -h, --help          -- This help summary
     -v, --version       -- Program version and contact information
+    -s, --skipdisclaimer -- Skip disclaimer dialog
     --random-search     -- Automatic placement using random search (default)
     --full-search       -- Automatic placement using exhaustive search
     --place-file=fn     -- Read placement from file
@@ -242,7 +243,7 @@ def writeCropMarks(fid, drawing_code, OriginX, OriginY, MaxXExtent, MaxYExtent):
   fid.write('X%07dY%07dD01*\n' % (util.in2gerb(x+cropW), util.in2gerb(y+0.000)))
 
 def disclaimer():
-  if (Config['skipdisclaimer'] > 0): # remove annoying disclaimer
+  if (config.Config['skipdisclaimer'] > 0): # remove annoying disclaimer
     return 
 
   print """
@@ -320,6 +321,8 @@ def merge(opts, args, gui = None):
   
   global GUI
   GUI = gui
+
+  skipDisclaimer = 0
   
   for opt, arg in opts:
     if opt in ('--octagons',):
@@ -344,11 +347,16 @@ def merge(opts, args, gui = None):
       config.TrimGerber = 0
     elif opt in ('--no-trim-excellon',):
       config.TrimExcellon = 0
+    elif opt in ('-s', '--skipdisclaimer'):
+      skipDisclaimer = 1
     else:
       raise RuntimeError, "Unknown option: %s" % opt
 
   if len(args) > 2 or len(args) < 1:
     raise RuntimeError, 'Invalid number of arguments'
+
+  if (skipDisclaimer == 0):
+    disclaimer()
     
   # Load up the Jobs global dictionary, also filling out GAT, the
   # global aperture table and GAMT, the global aperture macro table.
@@ -797,7 +805,7 @@ def updateGUI(text = None):
 
 if __name__=="__main__":
   try:
-    opts, args = getopt.getopt(sys.argv[1:], 'hv', ['help', 'version', 'octagons=', 'random-search', 'full-search', 'rs-fsjobs=', 'search-timeout=', 'place-file=', 'no-trim-gerber', 'no-trim-excellon'])
+    opts, args = getopt.getopt(sys.argv[1:], 'hvs', ['help', 'version', 'octagons=', 'random-search', 'full-search', 'rs-fsjobs=', 'search-timeout=', 'place-file=', 'no-trim-gerber', 'no-trim-excellon', 'skipdisclaimer'])
   except getopt.GetoptError:
     usage()
     
@@ -806,24 +814,21 @@ if __name__=="__main__":
       usage()
     elif opt in ('-v', '--version'):
       print """
-GerbMerge Version %d.%d  --  Combine multiple Gerber/Excellon files
+GerbMerge Version %d.%s  --  Combine multiple Gerber/Excellon files
 
 This program is licensed under the GNU General Public License (GPL)
-Version 3. See http://www.fsf.org for details of this license.
+Version 3. See LICENSE file or http://www.fsf.org for details of this license.
 
-Rugged Circuits LLC
-http://ruggedcircuits.com/gerbmerge
+ProvideYourOwn - http://provideyourown.com
 """ % (VERSION_MAJOR, VERSION_MINOR)
       sys.exit(0)
-    elif opt in ('--octagons', '--random-search','--full-search','--rs-fsjobs','--place-file','--no-trim-gerber','--no-trim-excellon', '--search-timeout'):
+    elif opt in ('--octagons', '--random-search','--full-search','--rs-fsjobs','--place-file','--no-trim-gerber','--no-trim-excellon', '--search-timeout', '-s', '--skipdisclaimer'):
       pass ## arguments are valid
     else:
       raise RuntimeError, "Unknown option: %s" % opt
 
   if len(args) > 2 or len(args) < 1:
     usage()
-
-  disclaimer()
-  
+    
   sys.exit(merge(opts, args)) ## run germberge
 # vim: expandtab ts=2 sw=2 ai syntax=python

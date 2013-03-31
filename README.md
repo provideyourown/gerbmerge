@@ -1,28 +1,6 @@
 <P><FONT SIZE="+2">GerbMerge -- A Gerber-file merging program</FONT></P>
 
-<BLOCKQUOTE>
-  <P><A HREF="http://ruggedcircuits.com/gerbmerge"><FONT
-   SIZE="-1">Rugged Circuits LLC</FONT></A><FONT SIZE="-1"></FONT></P>
-</BLOCKQUOTE>
-
-<P><HR ALIGN=LEFT><TABLE WIDTH="100%" BORDER="0" CELLSPACING="2"
-CELLPADDING="0">
-  <TR>
-    <TD>Top-Level | <A HREF="cfgfile.html">The Configuration File</A> | <A HREF="layoutfile.html">The Layout File</A> | <A HREF="autosearch.html">Automatic Placement</A></TD>
-    <TD ALIGN="RIGHT"><FONT SIZE="-1">Version 1.8</FONT></TD>
-  </TR>
-  <TR>
-    <TD><!-- --></TD>
-    <TD ALIGN="RIGHT"><FONT SIZE="-1">June 8, 2011</FONT></TD> 
-  </TR>
-  <TR>
-    <TD>
-    <FONT SIZE="-1"><A HREF="#Requirements">Requirements</A> | <A HREF="#Installation">Installation</A> | 
-    <A HREF="#Running">Running GerbMerge</A> | <A HREF="#Verifying">Verifying the Output</A> | <A HREF="#Limitations">Limitations</A> | <A HREF="#ProgramOptions">Program Options</A> | <A HREF="#Copyright">Copyright</A> | <A HREF="#Todo">To
-    Do</A> | <A HREF="#Credits">Credits</A> | <A HREF="#History">History</A></FONT></TD> 
-    <TD><!-- --></TD>
-  </TR>
-</TABLE><HR ALIGN=LEFT></P>
+<P><HR ALIGN=LEFT></P>
 
 <H2>What's New</H2>
 <P>In release 1.8:
@@ -308,12 +286,16 @@ fabrication drawing.</LI>
 <P><A NAME="Copyright"></A></P>
 <H2>Copyright &amp; License</H2>
 
+  <p>Copyright &copy; 2013 <a href="http://provideyourown.com">ProvideYourOwn.com</a>. All Rights Reserved.
+
+  <p>This repo is a fork of gerbmerge, version 1.8 from Rugged Circuits LLC: </p>
+
   <P>Copyright &COPY; 2011 <A HREF="http://ruggedcircuits.com">Rugged Circuits LLC</A>. All Rights Reserved.
   mailto: <A HREF="mailto:support@ruggedcircuits.com?subject=GerbMerge">support@ruggedcircuits.com</A>
   <P>GerbMerge comes with ABSOLUTELY NO WARRANTY. This
   is free software licensed under the terms of the <A HREF="gpl.html">GNU General
-  Public License</A> Version 3. You are welcome to redistribute this software
-  under certain conditions. For more details, see the previous link or
+  Public License</A> Version 3. You are welcome to copy, modify and redistribute this software
+  under certain conditions. For more details, see the LICENSE file or
   visit <A HREF="http://www.fsf.org">The Free Software Foundation</A>.
 
 <P><A NAME="Todo"></A></P>
@@ -351,7 +333,6 @@ fabrication drawing.</LI>
 
 <HR ALIGN=LEFT>
 
-<P><CENTER><FONT SIZE="-1">&COPY; 2003-2011, Copyright by <A HREF="http://ruggedcircuits.com">Rugged Circuits LLC</A>; All Rights Reserved. mailto: <A HREF="mailto:support@ruggedcircuits.com?subject=GerbMerge">support@ruggedcircuits.com</A></FONT></CENTER>
-
-</BODY>
-</HTML>
+<center><font size="-1">
+<p>&copy; 2013, Copyright &copy; 2013 <a href="http://provideyourown.com">ProvideYourOwn.com</a>. All Rights Reserved.</p>
+<p><center><font size="-1">Portions (version 1.8 & prior): &copy; Copyright 2003-2011, Copyright by <A HREF="http://ruggedcircuits.com">Rugged Circuits LLC</A>; All Rights Reserved. mailto: <A HREF="mailto:support@ruggedcircuits.com?subject=GerbMerge">support@ruggedcircuits.com</A></p></font></center>

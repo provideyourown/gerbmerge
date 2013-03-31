@@ -88,8 +88,11 @@ the board outline layer for each job.
 """
   sys.exit(1)
 
+# changed these two writeGerberHeader files to take metric units (mm) into account:
+
 def writeGerberHeader22degrees(fid):
-  fid.write( \
+  if config.Config['measurementunits'] == 'inch':
+    fid.write( \
 """G75*
 G70*
 %OFA0B0*%
@@ -100,9 +103,21 @@ G70*
 5,1,8,0,0,1.08239X$1,22.5*
 %
 """)
+  else:    # assume mm - also remove eagleware hack for %AMOC8
+    fid.write( \
+"""G75*
+G71*
+%MOMM*%
+%OFA0B0*%
+%FSLAX53Y53*%
+%IPPOS*%
+%LPD*%
+""")
+
 
 def writeGerberHeader0degrees(fid):
-  fid.write( \
+  if config.Config['measurementunits'] == 'inch':
+    fid.write( \
 """G75*
 G70*
 %OFA0B0*%
@@ -112,6 +127,16 @@ G70*
 %AMOC8*
 5,1,8,0,0,1.08239X$1,0.0*
 %
+""")
+  else:    # assume mm - also remove eagleware hack for %AMOC8
+    fid.write( \
+"""G75*
+G71*
+%MOMM*%
+%OFA0B0*%
+%FSLAX53Y53*%
+%IPPOS*%
+%LPD*%
 """)
 
 writeGerberHeader = writeGerberHeader22degrees
@@ -134,6 +159,11 @@ def writeGerberFooter(fid):
   fid.write('M02*\n')
 
 def writeExcellonHeader(fid):
+  if config.Config['measurementunits'] != 'inch': # metric - mm
+    fid.write( \
+"""M48
+METRIC,0000.00
+""")
   fid.write('%\n')
 
 def writeExcellonFooter(fid):
@@ -169,39 +199,51 @@ def writeCropMarks(fid, drawing_code, OriginX, OriginY, MaxXExtent, MaxYExtent):
   # Draw 125mil lines at each corner, with line edge right up against
   # panel border. This means the center of the line is D/2 offset
   # from the panel border, where D is the drawing line diameter.
+
+  # use 3mm lines for metric
+
   fid.write('%s*\n' % drawing_code)    # Choose drawing aperture
 
   offset = config.GAT[drawing_code].dimx/2.0
 
+  # should we be using 'cropmarkwidth' from config.py?
+  if config.Config['measurementunits'] == 'inch':
+    cropW = 0.125 #inch
+  else:
+    cropW = 3 #mm
+
+  
   # Lower-left
   x = OriginX + offset
   y = OriginY + offset
-  fid.write('X%07dY%07dD02*\n' % (util.in2gerb(x+0.125), util.in2gerb(y+0.000)))
+  fid.write('X%07dY%07dD02*\n' % (util.in2gerb(x+cropW), util.in2gerb(y+0.000)))
   fid.write('X%07dY%07dD01*\n' % (util.in2gerb(x+0.000), util.in2gerb(y+0.000)))
-  fid.write('X%07dY%07dD01*\n' % (util.in2gerb(x+0.000), util.in2gerb(y+0.125)))
+  fid.write('X%07dY%07dD01*\n' % (util.in2gerb(x+0.000), util.in2gerb(y+cropW)))
 
   # Lower-right
   x = MaxXExtent - offset
   y = OriginY + offset
-  fid.write('X%07dY%07dD02*\n' % (util.in2gerb(x+0.000), util.in2gerb(y+0.125)))
+  fid.write('X%07dY%07dD02*\n' % (util.in2gerb(x+0.000), util.in2gerb(y+cropW)))
   fid.write('X%07dY%07dD01*\n' % (util.in2gerb(x+0.000), util.in2gerb(y+0.000)))
-  fid.write('X%07dY%07dD01*\n' % (util.in2gerb(x-0.125), util.in2gerb(y+0.000)))
+  fid.write('X%07dY%07dD01*\n' % (util.in2gerb(x-cropW), util.in2gerb(y+0.000)))
 
   # Upper-right
   x = MaxXExtent - offset
   y = MaxYExtent - offset
-  fid.write('X%07dY%07dD02*\n' % (util.in2gerb(x-0.125), util.in2gerb(y+0.000)))
+  fid.write('X%07dY%07dD02*\n' % (util.in2gerb(x-cropW), util.in2gerb(y+0.000)))
   fid.write('X%07dY%07dD01*\n' % (util.in2gerb(x+0.000), util.in2gerb(y+0.000)))
-  fid.write('X%07dY%07dD01*\n' % (util.in2gerb(x+0.000), util.in2gerb(y-0.125)))
+  fid.write('X%07dY%07dD01*\n' % (util.in2gerb(x+0.000), util.in2gerb(y-cropW)))
 
   # Upper-left
   x = OriginX + offset
   y = MaxYExtent - offset
-  fid.write('X%07dY%07dD02*\n' % (util.in2gerb(x+0.000), util.in2gerb(y-0.125)))
+  fid.write('X%07dY%07dD02*\n' % (util.in2gerb(x+0.000), util.in2gerb(y-cropW)))
   fid.write('X%07dY%07dD01*\n' % (util.in2gerb(x+0.000), util.in2gerb(y+0.000)))
-  fid.write('X%07dY%07dD01*\n' % (util.in2gerb(x+0.125), util.in2gerb(y+0.000)))
+  fid.write('X%07dY%07dD01*\n' % (util.in2gerb(x+cropW), util.in2gerb(y+0.000)))
 
 def disclaimer():
+  #return # remove annoying disclaimer
+
   print """
 ****************************************************
 *           R E A D    C A R E F U L L Y           *
@@ -264,7 +306,11 @@ def tile_jobs(Jobs):
     tile = tilesearch1.tile_search1(L, PX, PY)
 
   if not tile:
-    raise RuntimeError, 'Panel size %.2f"x%.2f" is too small to hold jobs' % (PX,PY)
+    # add metric support (1/1000 mm vs. 1/100,000 inch)
+    if config.Config['measurementunits'] == 'inch':
+      raise RuntimeError, 'Panel size %.2f"x%.2f" is too small to hold jobs' % (PX,PY)
+    else:
+      raise RuntimeError, 'Panel size %.2fmmx%.2fmm is too small to hold jobs' % (PX,PY)
 
   return tile
 
@@ -325,7 +371,11 @@ def merge(opts, args, gui = None):
     else:
       print
     print '  Extents: (%d,%d)-(%d,%d)' % (job.minx,job.miny,job.maxx,job.maxy)
-    print '  Size: %f" x %f"' % (job.width_in(), job.height_in())
+    # add metric support (1/1000 mm vs. 1/100,000 inch)
+    if config.Config['measurementunits'] == 'inch':
+      print '  Size: %f" x %f"' % (job.width_in(), job.height_in())
+    else:
+      print '  Size: %5.3fmm x %5.3fmm' % (job.width_in(), job.height_in())
     print
 
   # Trim drill locations and flash data to board extents
@@ -343,7 +393,8 @@ def merge(opts, args, gui = None):
 
   # We start origin at (0.1", 0.1") just so we don't get numbers close to 0
   # which could trip up Excellon leading-0 elimination.
-  OriginX = OriginY = 0.1
+  # I don't want to change the origin. If this a code bug, then it should be fixed (SDD)
+  OriginX = OriginY = 0 #0.1
 
   # Read the layout file and construct the nested list of jobs. If there
   # is no layout file, do auto-layout.
@@ -530,7 +581,11 @@ def merge(opts, args, gui = None):
     writeGerberHeader(fid)
 
     # Write width-1 aperture to file
-    AP = aptable.Aperture(aptable.Circle, 'D10', 0.001)
+    # add metric support
+    if config.Config['measurementunits'] == 'inch':
+      AP = aptable.Aperture(aptable.Circle, 'D10', 0.001)
+    else:
+      AP = aptable.Aperture(aptable.Circle, 'D10', 0.25) # we'll use 0.25 mm - same as Diptrace
     AP.writeDef(fid)
 
     # Choose drawing aperture D10
@@ -681,22 +736,38 @@ def merge(opts, args, gui = None):
   fid = file(fullname, 'wt')
 
   print '-'*50
-  print '     Job Size : %f" x %f"' % (MaxXExtent-OriginX, MaxYExtent-OriginY)
-  print '     Job Area : %.2f sq. in.' % totalarea
+  # add metric support (1/1000 mm vs. 1/100,000 inch)
+  if config.Config['measurementunits'] == 'inch':
+    print '     Job Size : %f" x %f"' % (MaxXExtent-OriginX, MaxYExtent-OriginY)
+    print '     Job Area : %.2f sq. in.' % totalarea
+  else:
+    print '     Job Size : %.2fmm x %.2fmm' % (MaxXExtent-OriginX, MaxYExtent-OriginY)
+    print '     Job Area : %.0f mm2' % totalarea
+
   print '   Area Usage : %.1f%%' % (jobarea/totalarea*100)
   print '   Drill hits : %d' % drillhits
-  print 'Drill density : %.1f hits/sq.in.' % (drillhits/totalarea)
+  if config.Config['measurementunits'] == 'inch':
+    print 'Drill density : %.1f hits/sq.in.' % (drillhits/totalarea)
+  else:
+    print 'Drill density : %.2f hits/cm2' % (100*drillhits/totalarea)
 
   print '\nTool List:'
   smallestDrill = 999.9
   for tool in Tools:
     if ToolStats[tool]:
-      fid.write('%s %.4fin\n' % (tool, config.GlobalToolMap[tool]))
-      print '  %s %.4f" %5d hits' % (tool, config.GlobalToolMap[tool], ToolStats[tool])
+      if config.Config['measurementunits'] == 'inch':
+        fid.write('%s %.4fin\n' % (tool, config.GlobalToolMap[tool]))
+        print '  %s %.4f" %5d hits' % (tool, config.GlobalToolMap[tool], ToolStats[tool])
+      else:
+        fid.write('%s %.4fmm\n' % (tool, config.GlobalToolMap[tool]))
+        print '  %s %.4fmm %5d hits' % (tool, config.GlobalToolMap[tool], ToolStats[tool])
       smallestDrill = min(smallestDrill, config.GlobalToolMap[tool])
 
   fid.close()
-  print "Smallest Tool: %.4fin" % smallestDrill
+  if config.Config['measurementunits'] == 'inch':
+    print "Smallest Tool: %.4fin" % smallestDrill
+  else:
+    print "Smallest Tool: %.4fmm" % smallestDrill
 
   print
   print 'Output Files :'
@@ -706,7 +777,11 @@ def merge(opts, args, gui = None):
   if (MaxXExtent-OriginX)>config.Config['panelwidth'] or (MaxYExtent-OriginY)>config.Config['panelheight']:
     print '*'*75
     print '*'
-    print '* ERROR: Merged job exceeds panel dimensions of %.1f"x%.1f"' % (config.Config['panelwidth'],config.Config['panelheight'])
+    # add metric support (1/1000 mm vs. 1/100,000 inch)
+    if config.Config['measurementunits'] == 'inch':
+      print '* ERROR: Merged job exceeds panel dimensions of %.1f"x%.1f"' % (config.Config['panelwidth'],config.Config['panelheight'])
+    else:
+      print '* ERROR: Merged job exceeds panel dimensions of %.1fmmx%.1fmm' % (config.Config['panelwidth'],config.Config['panelheight'])
     print '*'
     print '*'*75
     sys.exit(1)

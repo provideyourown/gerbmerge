@@ -22,14 +22,15 @@ import aptable
 # Configuration dictionary. Specify floats as strings. Ints can be specified
 # as ints or strings.
 Config = {
-   'xspacing': '0.125',              # Spacing in horizontal direction
-   'yspacing': '0.125',              # Spacing in vertical direction
+   'measurementunits': 'inch',       # Unit system to use: inch or mm
+   'xspacing': 0,                    # Spacing in horizontal direction - default is set in parseConfigFile based on units
+   'yspacing': 0,                    # Spacing in vertical direction - ditto
    'panelwidth': '12.6',             # X-Dimension maximum panel size (Olimex)
    'panelheight': '7.8',             # Y-Dimension maximum panel size (Olimex)
    'cropmarklayers': None,           # e.g., *toplayer,*bottomlayer
-   'cropmarkwidth': '0.01',          # Width (inches) of crop lines
+   'cropmarkwidth': 0, #'0.01',          # Width (inches) of crop lines
    'cutlinelayers': None,            # as for cropmarklayers
-   'cutlinewidth': '0.01',           # Width (inches) of cut lines
+   'cutlinewidth': 0, #'0.01',           # Width (inches) of cut lines
    'minimumfeaturesize': 0,          # Minimum dimension for selected layers
    'toollist': None,                 # Name of file containing default tool list
    'drillclustertolerance': '.002',  # Tolerance for clustering drill sizes
@@ -255,6 +256,19 @@ def parseConfigFile(fname, Config=Config, Jobs=Jobs):
   if Config['cropmarklayers']:
     Config['cropmarklayers'] = parseStringList(Config['cropmarklayers'])
     
+# setup default x & y spacing, taking into account metric units
+#    if (xspacing == 0):
+#      if (Config['measurementunits'] == 'inch'):
+#        xspacing = 0.125
+#      else:
+#        xspacing = 3
+
+#    if (yspacing == 0):
+#      if (Config['measurementunits'] == 'inch'):
+#        yspacing = 0.125
+#      else:
+#        yspacing = 3
+
   # Process list of minimum feature dimensions
   if Config['minimumfeaturesize']:
     temp = Config['minimumfeaturesize'].split(",")

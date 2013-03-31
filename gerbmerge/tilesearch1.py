@@ -39,8 +39,15 @@ def printTilingStats():
 
   percent = 100.0*_Permutations/_PossiblePermutations
 
-  print "\r  %5.2f%% complete / %ld/%ld Perm/Place / Smallest area: %.1f sq. in. / Best utilization: %.1f%%" % \
+
+  # add metric support (1/1000 mm vs. 1/100,000 inch)
+  if config.Config['measurementunits'] == 'inch':
+    print "\r  %5.2f%% complete / %ld/%ld Perm/Place / Smallest area: %.1f sq. in. / Best utilization: %.1f%%" % \
         (percent, _Permutations, _Placements, area, utilization),
+  else:
+    print "\r  %5.2f%% complete / %ld/%ld Perm/Place / Smallest area: %.1f sq. mm / Best utilization: %.1f%%" % \
+        (percent, _Permutations, _Placements, area, utilization),
+
 
   if gerbmerge.GUI is not None:
     sys.stdout.flush()

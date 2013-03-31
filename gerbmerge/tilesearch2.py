@@ -36,7 +36,12 @@ def printTilingStats():
     area = 999999.0
     utilization = 0.0
 
-  print "\r  %ld placements / Smallest area: %.1f sq. in. / Best utilization: %.1f%%" % \
+  # add metric support (1/1000 mm vs. 1/100,000 inch)
+  if config.Config['measurementunits'] == 'inch':
+    print "\r  %ld placements / Smallest area: %.1f sq. in. / Best utilization: %.1f%%" % \
+        (_Placements, area, utilization),
+  else:
+    print "\r  %ld placements / Smallest area: %.1f sq. mm / Best utilization: %.0f%%" % \
         (_Placements, area, utilization),
 
   if gerbmerge.GUI is not None:

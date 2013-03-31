@@ -36,6 +36,11 @@ import util
 #   D02 -- move with exposure off
 #   D03 -- flash aperture
 
+# TODO:
+#
+# Need to add error checking for metric/imperial units matching those of the files input
+# Check fabdrawing.py to see if writeDrillHits is scaling properly (the only place it is used)
+
 # Patterns for Gerber RS274X file interpretation
 apdef_pat = re.compile(r'^%AD(D\d+)([^*$]+)\*%$')     # Aperture definition
 apmdef_pat = re.compile(r'^%AM([^*$]+)\*$')           # Aperture macro definition
@@ -180,12 +185,21 @@ class Job:
     self.ExcellonDecimals = 0     # 0 means global value prevails
 
   def width_in(self):
-    "Return width in INCHES"
-    return float(self.maxx-self.minx)*0.00001
+    # add metric support (1/1000 mm vs. 1/100,000 inch)
+    if config.Config['measurementunits'] == 'inch':
+      "Return width in INCHES"
+      return float(self.maxx-self.minx)*0.00001
+    else:
+      return float(self.maxx-self.minx)*0.001
+
 
   def height_in(self):
-    "Return height in INCHES"
-    return float(self.maxy-self.miny)*0.00001
+    # add metric support (1/1000 mm vs. 1/100,000 inch)
+    if config.Config['measurementunits'] == 'inch':
+      "Return height in INCHES"
+      return float(self.maxy-self.miny)*0.00001
+    else:
+      return float(self.maxy-self.miny)*0.001
 
   def jobarea(self):
     return self.width_in()*self.height_in()
@@ -339,6 +353,21 @@ class Job:
       if line[:7]=='%AMOC8*':
         continue
 
+# DipTrace specific fixes, but could be emitted by any CAD program. They are Standard Gerber RS-274X
+      # a hack to fix lack of recognition for metric direction from DipTrace - %MOMM*%
+      if (line[:7] == '%MOMM*%'):
+        if (config.Config['measurementunits'] == 'inch'):
+          raise RuntimeError, "File %s units do match config file" % fullname
+        else:
+        #print "ignoring metric directive: " + line
+          continue # ignore it so func doesn't choke on it
+
+      if line[:3] == '%SF': # scale factor - we will ignore it
+        print 'Scale factor parameter ignored: ' + line
+        continue
+      
+# end basic diptrace fixes
+
       # See if this is an aperture macro definition, and if so, map it.
       M = amacro.parseApertureMacro(line,fid)
       if M:
@@ -384,12 +413,24 @@ class Job:
             if item[0]=='N':      # Maximum digits for N* commands...ignore it
               continue
 
-            if item[0]=='X':      # M.N specification for X-axis.
-              fracpart = int(item[2])
-              x_div = 10.0**(5-fracpart)
-            if item[0]=='Y':      # M.N specification for Y-axis.
-              fracpart = int(item[2])
-              y_div = 10.0**(5-fracpart)
+            # allow for metric - scale to 1/1000 mm
+            if config.Config['measurementunits'] == 'inch':
+              if item[0]=='X':      # M.N specification for X-axis.
+                fracpart = int(item[2])
+                x_div = 10.0**(5-fracpart)
+              if item[0]=='Y':      # M.N specification for Y-axis.
+                fracpart = int(item[2])
+                y_div = 10.0**(5-fracpart)
+            else:
+              if item[0]=='X':      # M.N specification for X-axis.
+                fracpart = int(item[2])
+                x_div = 10.0**(3-fracpart)
+                #print "x_div= %5.3f." % x_div
+              if item[0]=='Y':      # M.N specification for Y-axis.
+                fracpart = int(item[2])
+                y_div = 10.0**(3-fracpart)
+                #print "y_div= %5.3f." % y_div
+      
           continue
 
         # Parse and interpret G-codes
@@ -400,7 +441,8 @@ class Job:
 
           # Determine if this is a G-Code that should be ignored because it has no effect
           # (e.g., G70 specifies "inches" which is already in effect).
-          if gcode in [54, 70, 90]:
+          # added 71 - specify mm (metric)
+          if gcode in [54, 70, 90, 71]:
             continue
 
           # Determine if this is a G-Code that we have to emit because it matters.
@@ -426,6 +468,15 @@ class Job:
         match = tool_pat.match(sub_line)
         if match:
           currtool = match.group(1)
+
+# Diptrace hack
+# There is a D2* command in board outlines. I believe this should be D02. Let's change it then when it occurs:
+          if (currtool == 'D1'):
+            currtool = 'D01'
+          if (currtool == 'D2'):
+            currtool = 'D02'
+          if (currtool == 'D3'):
+            currtool = 'D03'
 
           # Protel likes to issue random D01, D02, and D03 commands instead of aperture
           # codes. We can ignore D01 because it simply means to move to the current location
@@ -597,6 +648,18 @@ class Job:
       # Get rid of CR characters
       line = string.replace(line, '\x0D', '')
 
+# add support for DipTrace
+      if line[:6]=='METRIC':
+        if (config.Config['measurementunits'] == 'inch'):
+          raise RuntimeError, "File %s units do match config file" % fullname
+        else:
+        #print "ignoring METRIC directive: " + line
+          continue # ignore it so func doesn't choke on it
+
+      if line[:3] == 'T00': # a tidying up that we can ignore
+        continue
+# end metric/diptrace support
+
       # Protel likes to embed comment lines beginning with ';'
       if line[0]==';':
         continue
@@ -704,9 +767,15 @@ class Job:
     # Maybe we don't have this layer
     if not self.hasLayer(layername): return
 
-    # First convert given inches to 2.5 co-ordinates
-    X = int(round(Xoff/0.00001))
-    Y = int(round(Yoff/0.00001))
+    # add metric support (1/1000 mm vs. 1/100,000 inch)
+    if config.Config['measurementunits'] == 'inch':
+      # First convert given inches to 2.5 co-ordinates
+      X = int(round(Xoff/0.00001))
+      Y = int(round(Yoff/0.00001))
+    else:
+      # First convert given mm to 5.3 co-ordinates
+      X = int(round(Xoff/0.001))
+      Y = int(round(Yoff/0.001))
 
     # Now calculate displacement for each position so that we end up at specified origin
     DX = X - self.minx
@@ -749,14 +818,20 @@ class Job:
     # and our internal Excellon representation is 2.4 as of GerbMerge
     # version 0.91. We use X,Y to calculate DX,DY in 2.4 units (i.e., with a
     # resolution of 0.0001".
-    X = int(round(Xoff/0.00001))  # First work in 2.5 format to match Gerber
-    Y = int(round(Yoff/0.00001))
+    # add metric support (1/1000 mm vs. 1/100,000 inch)
+    if config.Config['measurementunits'] == 'inch':
+      X = int(round(Xoff/0.00001))  # First work in 2.5 format to match Gerber
+      Y = int(round(Yoff/0.00001))
+    else:
+      X = int(round(Xoff/0.001))  # First work in 5.3 format to match Gerber
+      Y = int(round(Yoff/0.001))
 
     # Now calculate displacement for each position so that we end up at specified origin
     DX = X - self.minx
     DY = Y - self.miny
 
     # Now round down to 2.4 format
+    # this scaling seems to work for either unit system
     DX = int(round(DX/10.0))
     DY = int(round(DY/10.0))
 
@@ -778,9 +853,15 @@ class Job:
     """Write a drill hit pattern. diameter is tool diameter in inches, while toolNum is
     an integer index into strokes.DrillStrokeList"""
 
-    # First convert given inches to 2.5 co-ordinates
-    X = int(round(Xoff/0.00001))
-    Y = int(round(Yoff/0.00001))
+    # add metric support (1/1000 mm vs. 1/100,000 inch)
+    if config.Config['measurementunits'] == 'inch':
+      # First convert given inches to 2.5 co-ordinates
+      X = int(round(Xoff/0.00001))
+      Y = int(round(Yoff/0.00001))
+    else:
+      # First convert given inches to 5.3 co-ordinates
+      X = int(round(Xoff/0.001))
+      Y = int(round(Yoff/0.001))
 
     # Now calculate displacement for each position so that we end up at specified origin
     DX = X - self.minx
@@ -795,6 +876,8 @@ class Job:
       if self.xcommands.has_key(ltool):
         for cmd in self.xcommands[ltool]:
           x, y = cmd
+          # add metric support (1/1000 mm vs. 1/100,000 inch)
+# TODO - verify metric scaling is correct???
           makestroke.drawDrillHit(fid, 10*x+DX, 10*y+DY, toolNum)
 
   def aperturesAndMacros(self, layername):
@@ -881,9 +964,14 @@ class Job:
                 newX, newY = geometry.rectCenter(newRect)
 
                 # We arbitrarily remove all flashes that lead to rectangles
-                # with a width or length less than 1 mil (10 Gerber units).
+                # with a width or length less than 1 mil (10 Gerber units). - sdd s.b. 0.1mil???
                 # Should we make this configurable?
-                if min(newRectWidth, newRectHeight) >= 10:
+# add metric support (1/1000 mm vs. 1/100,000 inch)
+#                if config.Config['measurementunits'] == 'inch':
+#                  minFlash = 10;
+#                else
+#                  minFlash = 
+                if min(newRectWidth, newRectHeight) >= 10: # sdd - change for metric case at some point
                   # Construct an Aperture that is a Rectangle of dimensions (newRectWidth,newRectHeight)
                   newAP = aptable.Aperture(aptable.Rectangle, 'D??', \
                             util.gerb2in(newRectWidth), util.gerb2in(newRectHeight))
@@ -1006,7 +1094,12 @@ class Job:
     keys = self.xcommands.keys()
     for toolname in keys:
       # Remember Excellon is 2.4 format while Gerber data is 2.5 format
-      validList = [(x,y) for x,y in self.xcommands[toolname] if self.inBorders(10*x,10*y)]
+# add metric support (1/1000 mm vs. 1/100,000 inch)
+# the normal metric scale factor isn't working right, so we'll leave it alone!!!!?
+      if config.Config['measurementunits'] == 'inch':
+        validList = [(x,y) for x,y in self.xcommands[toolname] if self.inBorders(10*x,10*y)]
+      else:
+        validList = [(x,y) for x,y in self.xcommands[toolname] if self.inBorders(0.1*x,0.1*y)]
 
       if validList:
         self.xcommands[toolname] = validList
@@ -1271,11 +1364,15 @@ def rotateJob(job, degrees = 90, firstpass = True):
     J.xcommands[tool] = []
 
     for x,y in job.xcommands[tool]:
+# add metric support (1/1000 mm vs. 1/100,000 inch)
+# NOTE: There don't appear to be any need for a change. The usual x10 factor seems to apply
+
       newx = -(10*y - job.miny) + job.minx + offset
       newy =  (10*x - job.minx) + job.miny
 
       newx = int(round(newx/10.0))
       newy = int(round(newy/10.0))
+
 
       J.xcommands[tool].append((newx,newy))
 

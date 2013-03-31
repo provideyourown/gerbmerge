@@ -176,7 +176,7 @@ def _tile_search1(Jobs, TSoFar, firstAddPoint, cfg=config.Config):
     if _PrintStats and time.time() > _CkpointTime:
       printTilingStats()
       
-      # Check for timeout - sdd - changed to file config
+      # Check for timeout - changed to file config
       if (config.Config['searchtimeout'] > 0) and ((time.time() - _StartTime) > config.Config['searchtimeout']):
         raise KeyboardInterrupt 
         

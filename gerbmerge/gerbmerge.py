@@ -242,7 +242,8 @@ def writeCropMarks(fid, drawing_code, OriginX, OriginY, MaxXExtent, MaxYExtent):
   fid.write('X%07dY%07dD01*\n' % (util.in2gerb(x+cropW), util.in2gerb(y+0.000)))
 
 def disclaimer():
-  #return # remove annoying disclaimer
+  if (Config['skipdisclaimer'] > 0): # remove annoying disclaimer
+    return 
 
   print """
 ****************************************************

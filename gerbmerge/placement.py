@@ -55,6 +55,8 @@ class Placement:
     fid = file(fname, 'wt')
     for job in self.jobs:
       fid.write('%s %.3f %.3f\n' % (job.job.name, job.x, job.y))
+      # added; thought it would be useful to know
+      print "job locations: job - %s x,y(%f,%f)" % (job.job.name, job.x, job.y)
     fid.close()
 
   def addFromFile(self, fname, Jobs):

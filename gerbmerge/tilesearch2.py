@@ -113,8 +113,8 @@ def _tile_search2(Jobs, X, Y, cfg=config.Config):
     if time.time() > _CkpointTime:
       printTilingStats()
       
-      # Check for timeout
-      if (config.SearchTimeout > 0) and ((time.time() - _StartTime) > config.SearchTimeout):
+      # Check for timeout - sdd - changed to file config
+      if (config.Config['searchtimeout'] > 0) and ((time.time() - _StartTime) > config.Config['searchtimeout']):
         raise KeyboardInterrupt 
         
     gerbmerge.updateGUI("Performing automatic layout...")

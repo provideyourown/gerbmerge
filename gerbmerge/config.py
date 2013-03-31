@@ -23,6 +23,8 @@ import aptable
 # as ints or strings.
 Config = {
    'measurementunits': 'inch',       # Unit system to use: inch or mm
+   'searchtimeout': 0,               # moved here from hardcoded below
+   'skipdisclaimer': 0,              # set to 1 to skip disclaimer prompt
    'xspacing': 0,                    # Spacing in horizontal direction - default is set in parseConfigFile based on units
    'yspacing': 0,                    # Spacing in vertical direction - ditto
    'panelwidth': '12.6',             # X-Dimension maximum panel size (Olimex)
@@ -103,7 +105,9 @@ MinimumFeatureDimension = {}
 # amout of time to allow for random placements (seconds). A SearchTimeout of 0
 # indicates that no timeout should occur and random placements will occur
 # forever until a KeyboardInterrupt is raised.
-SearchTimeout = 0
+
+# moved to setting that can be loaded from config file
+#SearchTimeout = 0
 
 # Construct the reverse-GAT/GAMT translation table, keyed by aperture/aperture macro
 # hash string. The value is the aperture code (e.g., 'D10') or macro name (e.g., 'M5').
@@ -343,6 +347,7 @@ def parseConfigFile(fname, Config=Config, Jobs=Jobs):
     if jobname=='MergeOutputFiles': continue
     if jobname=='GerbMergeGUI': continue
 
+    print '' # empty line before hand for readability
     print 'Reading data from', jobname, '...'
 
     J = jobs.Job(jobname)

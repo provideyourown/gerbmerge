@@ -1138,68 +1138,90 @@ class JobLayout:
     def notEdge(x, X):
       return round(abs(1000*(x-X)))
 
-    assert self.x and self.y
+    #assert self.x and self.y
 
-    radius = config.GAT[drawing_code].dimx/2.0
-    
-    # Start at lower-left, proceed clockwise
-    x = self.x - radius
-    y = self.y - radius
+#if job has a boardoutline layer, write it, else calculate one
+    outline_layer = 'boardoutline';
+    if self.job.hasLayer(outline_layer):     
+      # somewhat of a hack here; making use of code in gerbmerge, around line 516,
+      # we are going to replace the used of the existing draw code in the boardoutline
+      # file with the one passed in (which was created from layout.cfg ('CutLineWidth')
+      # It is a hack in that we are assuming there is only one draw code in the
+      # boardoutline file. We are just going to ignore that definition and change
+      # all usages of that code to our new one. As a side effect, it will make
+      # the merged boardoutline file invalid, but we aren't using it with this method.
+      temp = []
+      for x in self.job.commands[outline_layer]:
+        if x[0] == 'D':
+          temp.append(drawing_code) ## replace old aperture with new one
+        else:
+          temp.append(x)        ## keep old command
+      self.job.commands[outline_layer] = temp
 
-    left = notEdge(self.x, X1)
-    right = notEdge(self.x+self.width_in(), X2)
-    bot = notEdge(self.y, Y1)
-    top = notEdge(self.y+self.height_in(), Y2)
+      #self.job.writeGerber(fid, outline_layer, X1, Y1)      
+      self.writeGerber(fid, outline_layer)
+      
+    else:
+      radius = config.GAT[drawing_code].dimx/2.0
+      
+      # Start at lower-left, proceed clockwise
+      x = self.x - radius
+      y = self.y - radius
 
-    BL = ((x), (y))
-    TL = ((x), (y+self.height_in()+2*radius))
-    TR = ((x+self.width_in()+2*radius), (y+self.height_in()+2*radius))
-    BR = ((x+self.width_in()+2*radius), (y))
+      left = notEdge(self.x, X1)
+      right = notEdge(self.x+self.width_in(), X2)
+      bot = notEdge(self.y, Y1)
+      top = notEdge(self.y+self.height_in(), Y2)
 
-    if not left:
-      BL = (BL[0]+2*radius, BL[1])
-      TL = (TL[0]+2*radius, TL[1])
+      BL = ((x), (y))
+      TL = ((x), (y+self.height_in()+2*radius))
+      TR = ((x+self.width_in()+2*radius), (y+self.height_in()+2*radius))
+      BR = ((x+self.width_in()+2*radius), (y))
 
-    if not top:
-      TL = (TL[0], TL[1]-2*radius)
-      TR = (TR[0], TR[1]-2*radius)
+      if not left:
+        BL = (BL[0]+2*radius, BL[1])
+        TL = (TL[0]+2*radius, TL[1])
 
-    if not right:
-      TR = (TR[0]-2*radius, TR[1])
-      BR = (BR[0]-2*radius, BR[1])
+      if not top:
+        TL = (TL[0], TL[1]-2*radius)
+        TR = (TR[0], TR[1]-2*radius)
 
-    if not bot:
-      BL = (BL[0], BL[1]+2*radius)
-      BR = (BR[0], BR[1]+2*radius)
+      if not right:
+        TR = (TR[0]-2*radius, TR[1])
+        BR = (BR[0]-2*radius, BR[1])
 
-    BL = (util.in2gerb(BL[0]), util.in2gerb(BL[1]))
-    TL = (util.in2gerb(TL[0]), util.in2gerb(TL[1]))
-    TR = (util.in2gerb(TR[0]), util.in2gerb(TR[1]))
-    BR = (util.in2gerb(BR[0]), util.in2gerb(BR[1]))
+      if not bot:
+        BL = (BL[0], BL[1]+2*radius)
+        BR = (BR[0], BR[1]+2*radius)
 
-    # The "if 1 or ..." construct draws all four sides of the job. By
-    # removing the 1 from the expression, only the sides that do not
-    # correspond to panel edges are drawn. The former is probably better
-    # since panels tend to have a little slop from the cutting operation
-    # and it's easier to just cut it smaller when there's a cut line.
-    # The way it is now with "if 1 or....", much of this function is
-    # unnecessary. Heck, we could even just use the boardoutline layer
-    # directly.
-    if 1 or left:
-      fid.write('X%07dY%07dD02*\n' % BL)
-      fid.write('X%07dY%07dD01*\n' % TL)
+      BL = (util.in2gerb(BL[0]), util.in2gerb(BL[1]))
+      TL = (util.in2gerb(TL[0]), util.in2gerb(TL[1]))
+      TR = (util.in2gerb(TR[0]), util.in2gerb(TR[1]))
+      BR = (util.in2gerb(BR[0]), util.in2gerb(BR[1]))
 
-    if 1 or top:
-      if not left: fid.write('X%07dY%07dD02*\n' % TL)
-      fid.write('X%07dY%07dD01*\n' % TR)
+      # The "if 1 or ..." construct draws all four sides of the job. By
+      # removing the 1 from the expression, only the sides that do not
+      # correspond to panel edges are drawn. The former is probably better
+      # since panels tend to have a little slop from the cutting operation
+      # and it's easier to just cut it smaller when there's a cut line.
+      # The way it is now with "if 1 or....", much of this function is
+      # unnecessary. Heck, we could even just use the boardoutline layer
+      # directly.
+      if 1 or left:
+        fid.write('X%07dY%07dD02*\n' % BL)
+        fid.write('X%07dY%07dD01*\n' % TL)
 
-    if 1 or right:
-      if not top: fid.write('X%07dY%07dD02*\n' % TR)
-      fid.write('X%07dY%07dD01*\n' % BR)
+      if 1 or top:
+        if not left: fid.write('X%07dY%07dD02*\n' % TL)
+        fid.write('X%07dY%07dD01*\n' % TR)
 
-    if 1 or bot:
-      if not right: fid.write('X%07dY%07dD02*\n' % BR)
-      fid.write('X%07dY%07dD01*\n' % BL)
+      if 1 or right:
+        if not top: fid.write('X%07dY%07dD02*\n' % TR)
+        fid.write('X%07dY%07dD01*\n' % BR)
+
+      if 1 or bot:
+        if not right: fid.write('X%07dY%07dD02*\n' % BR)
+        fid.write('X%07dY%07dD01*\n' % BL)
 
   def setPosition(self, x, y):
     self.x=x

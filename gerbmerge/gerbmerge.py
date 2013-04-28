@@ -566,6 +566,7 @@ def merge(opts, args, gui = None):
 
       if config.Config['cutlinelayers'] and (layername in config.Config['cutlinelayers']):
         fid.write('%s*\n' % drawing_code_cut)    # Choose drawing aperture
+        #print "writing drawcode_cut: %s" % drawing_code_cut
         job.writeCutLines(fid, drawing_code_cut, OriginX, OriginY, MaxXExtent, MaxYExtent)
 
     if config.Config['cropmarklayers']:

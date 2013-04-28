@@ -3,6 +3,13 @@
 <P><HR ALIGN=LEFT></P>
 
 <H2>What's New</H2>
+<p>In release 1.9</p>
+<ul>
+<li>Added metric support</li>
+<li>Added default timeout for random tile placement</li>
+<li>Added DipTrace support</li>
+<li>Use boardoutline files (when present) to build cutlines in silkscreen layers instead of the default calculated algorithm. This change permits non-rectangular board outlines.</li>
+</ul>
 <P>In release 1.8:
 <UL>
 <LI>Released under more recent GPL v3 license</LI>
@@ -34,13 +41,6 @@
   Here is <A HREF="sample.jpg">one sample</A> and <A HREF="sample2.jpg">another sample</A> of the program's output. These samples
   demonstrate panelizing multiple, different jobs, and also demonstrate board rotation.
 
-<P><A NAME="Download"></A></P>
-<H2>Download</H2>
-<H3>Version 1.8</H3>
-<UL>
-<LI><A HREF="gerbmerge-1.8.win32.exe">Windows installer</A></LI>
-<LI><A HREF="gerbmerge-1.8.tar.gz">Source</A></LI>
-</UL>
 
 <P><A NAME="Requirements"></A></P>
 <H2>Requirements</H2>
@@ -290,7 +290,7 @@ fabrication drawing.</LI>
 
   <p>This repo is a fork of gerbmerge, version 1.8 from Rugged Circuits LLC: </p>
 
-  <P>Copyright &COPY; 2011 <A HREF="http://ruggedcircuits.com">Rugged Circuits LLC</A>. All Rights Reserved.
+  <P>Copyright &copy; 2011 <A HREF="http://ruggedcircuits.com">Rugged Circuits LLC</A>. All Rights Reserved.
   mailto: <A HREF="mailto:support@ruggedcircuits.com?subject=GerbMerge">support@ruggedcircuits.com</A>
   <P>GerbMerge comes with ABSOLUTELY NO WARRANTY. This
   is free software licensed under the terms of the <A HREF="gpl.html">GNU General
@@ -334,5 +334,5 @@ fabrication drawing.</LI>
 <HR ALIGN=LEFT>
 
 <center><font size="-1">
-<p>&copy; 2013, Copyright &copy; 2013 <a href="http://provideyourown.com">ProvideYourOwn.com</a>. All Rights Reserved.</p>
-<p><center><font size="-1">Portions (version 1.8 & prior): &copy; Copyright 2003-2011, Copyright by <A HREF="http://ruggedcircuits.com">Rugged Circuits LLC</A>; All Rights Reserved. mailto: <A HREF="mailto:support@ruggedcircuits.com?subject=GerbMerge">support@ruggedcircuits.com</A></p></font></center>
+<p>Copyright &copy; 2013 <a href="http://provideyourown.com">ProvideYourOwn.com</a>. All Rights Reserved.</p>
+<p><center><font size="-1">Portions (version 1.8 & prior): Copyright &copy; 2003-2011, Copyright by <A HREF="http://ruggedcircuits.com">Rugged Circuits LLC</A>; All Rights Reserved. mailto: <A HREF="mailto:support@ruggedcircuits.com?subject=GerbMerge">support@ruggedcircuits.com</A></p></font></center>

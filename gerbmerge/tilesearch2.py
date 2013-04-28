@@ -132,8 +132,14 @@ def tile_search2(Jobs, X, Y):
   _TBestScore = float(sys.maxint)
 
   print '='*70
-  print "Starting random placement trials. You must press Ctrl-C to"
-  print "stop the process and use the best placement so far."
+  if (config.Config['searchtimeout'] > 0):
+    print "Starting random placement trials. You can press Ctrl-C to"
+    print "stop the process and use the best placement so far, or wait"
+    print "for the automatic timeout in %i seconds." % config.Config['searchtimeout']
+  else:
+    print "Starting random placement trials. You must press Ctrl-C to"
+    print "stop the process and use the best placement so far." 
+    print "You can specify a timeout by setting 'SearchTimeout' in  Layout.cfg"
   print "Estimated maximum possible utilization is %.1f%%." % (tiling.maxUtilization(Jobs)*100)
 
   try:
